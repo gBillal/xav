@@ -1,8 +1,8 @@
 defmodule Xav.MixProject do
   use Mix.Project
 
-  @version "0.11.0"
-  @source_url "https://github.com/elixir-webrtc/xav"
+  @version "0.12.0"
+  @source_url "https://github.com/gBillal/xav"
 
   def project do
     [
