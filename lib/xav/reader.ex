@@ -33,12 +33,20 @@ defmodule Xav.Reader do
     ],
     framerate: [
       type: {:tuple, [:non_neg_integer, :non_neg_integer]},
-      default: {0,0},
+      default: {0, 0},
       doc:
         "the framerate a a 2-element tuple with the first element beign the nominator and the second element the denominator. Will only be used when reading from a device."
     ],
-    width: [type: :non_neg_integer, default: 0, doc: "the width of the device resolution. Only used when reading from a device."],
-    height: [type: :non_neg_integer,default: 0,  doc: "the height of the device resolution. Only used when reading from a device."]
+    width: [
+      type: :non_neg_integer,
+      default: 0,
+      doc: "the width of the device resolution. Only used when reading from a device."
+    ],
+    height: [
+      type: :non_neg_integer,
+      default: 0,
+      doc: "the height of the device resolution. Only used when reading from a device."
+    ]
   ]
 
   @type t() :: %__MODULE__{
