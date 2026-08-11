@@ -35,8 +35,8 @@ jobs:
     name: test-linux-x86-64 / ubuntu-22.04 / OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
-        otp: ["25"]
-        elixir: ["1.14"]
+        otp: ["26"]
+        elixir: ["1.15"]
     env:
       MIX_ENV: test
     steps:
@@ -54,8 +54,8 @@ jobs:
     name: test-linux-x86-64 / ubuntu-24.04 / OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
-        otp: ["25"]
-        elixir: ["1.14"]
+        otp: ["26"]
+        elixir: ["1.15"]
     env:
       MIX_ENV: test
     steps:
@@ -73,8 +73,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   test-macos:
-    runs-on: macos-13
-    name: test-macos-x86-64 / macos-13 / OTP latest / Elixir latest
+    runs-on: macos-15-intel
+    name: test-macos-x86-64 / macos-15 / OTP latest / Elixir latest
     env:
       MIX_ENV: test
       # MacOS runners seem to have static IP addresses
@@ -89,8 +89,8 @@ jobs:
       - run: mix test
 
   test-macos-arm:
-    runs-on: macos-14
-    name: test-macos-arm / macos-14 / OTP latest / Elixir latest
+    runs-on: macos-15
+    name: test-macos-arm / macos-15 / OTP latest / Elixir latest
     env:
       MIX_ENV: test
       XLA_HTTP_HEADERS: "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
