@@ -9,6 +9,7 @@ static ERL_NIF_TERM codec_get_profiles(ErlNifEnv *, const AVCodec *);
 static ERL_NIF_TERM codec_get_sample_formats(ErlNifEnv *, const AVCodec *);
 static ERL_NIF_TERM codec_get_sample_rates(ErlNifEnv *, const AVCodec *);
 static ERL_NIF_TERM codec_get_channel_layouts(ErlNifEnv *, const AVCodec *);
+static int get_codec_options(ErlNifEnv *, ERL_NIF_TERM, AVDictionary **);
 
 ERL_NIF_TERM new (ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   if (argc != 2) {
@@ -67,6 +68,12 @@ ERL_NIF_TERM new (ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
       err = enif_get_int(env, value, &encoder_config.sample_rate);
     } else if (strcmp(config_name, "channel_layout") == 0) {
       err = xav_nif_get_string(env, value, &channel_layout);
+    } else if (strcmp(config_name, "bit_rate") == 0) {
+      ErlNifSInt64 bit_rate;
+      err = enif_get_int64(env, value, &bit_rate);
+      encoder_config.bit_rate = bit_rate;
+    } else if (strcmp(config_name, "codec_options") == 0) {
+      err = get_codec_options(env, value, &encoder_config.codec_options);
     } else {
       ret = xav_nif_raise(env, "unknown_config_key");
       goto clean;
@@ -122,7 +129,11 @@ ERL_NIF_TERM new (ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
       enif_alloc_resource(xav_encoder_resource_type, sizeof(struct XavEncoder));
 
   xav_encoder->encoder = encoder_alloc();
-  if (encoder_init(xav_encoder->encoder, &encoder_config) < 0) {
+  int init_ret = encoder_init(xav_encoder->encoder, &encoder_config);
+  if (init_ret == AVERROR_OPTION_NOT_FOUND) {
+    ret = xav_nif_raise(env, "unknown_codec_option");
+    goto clean;
+  } else if (init_ret < 0) {
     ret = xav_nif_raise(env, "failed_to_init_encoder");
     goto clean;
   }
@@ -162,6 +173,7 @@ clean:
     XAV_FREE(profile);
   if (channel_layout)
     XAV_FREE(channel_layout);
+  av_dict_free(&encoder_config.codec_options);
   enif_map_iterator_destroy(env, &iter);
 
   return ret;
@@ -383,3 +395,33 @@ static int load(ErlNifEnv *env, void **priv, ERL_NIF_TERM load_info) {
 }
 
 ERL_NIF_INIT(Elixir.Xav.Encoder.NIF, xav_funcs, &load, NULL, NULL, NULL);
+
+// A list of {key, value} binaries, set as the codec's private options.
+static int get_codec_options(ErlNifEnv *env, ERL_NIF_TERM list, AVDictionary **opts) {
+  ERL_NIF_TERM head, tail = list;
+
+  while (enif_get_list_cell(env, tail, &head, &tail)) {
+    int arity;
+    const ERL_NIF_TERM *pair;
+    char *key = NULL, *value = NULL;
+
+    if (!enif_get_tuple(env, head, &arity, &pair) || arity != 2 ||
+        !xav_nif_get_string(env, pair[0], &key)) {
+      return 0;
+    }
+
+    if (!xav_nif_get_string(env, pair[1], &value)) {
+      XAV_FREE(key);
+      return 0;
+    }
+
+    int ret = av_dict_set(opts, key, value, 0);
+    XAV_FREE(key);
+    XAV_FREE(value);
+    if (ret < 0) {
+      return 0;
+    }
+  }
+
+  return enif_is_empty_list(env, tail);
+}

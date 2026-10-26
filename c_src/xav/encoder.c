@@ -46,7 +46,13 @@ int encoder_init(struct Encoder *encoder, struct EncoderConfig *config) {
     encoder->c->profile = config->profile;
   }
 
-  AVDictionary *opts = NULL;
+  if (config->bit_rate > 0) {
+    encoder->c->bit_rate = config->bit_rate;
+  }
+
+  // The codec's private options; the encoder takes ownership.
+  AVDictionary *opts = config->codec_options;
+  config->codec_options = NULL;
   if (strcmp(encoder->codec->name, "libx265") == 0) {
     char x265_params[256] = "log-level=warning";
     if (config->gop_size > 0) {
@@ -60,7 +66,14 @@ int encoder_init(struct Encoder *encoder, struct EncoderConfig *config) {
     av_dict_set(&opts, "x265-params", x265_params, 0);
   }
 
-  return avcodec_open2(encoder->c, encoder->codec, &opts);
+  int ret = avcodec_open2(encoder->c, encoder->codec, &opts);
+  // avcodec_open2 leaves the options the codec doesn't know: refuse them.
+  if (ret >= 0 && av_dict_count(opts) > 0) {
+    ret = AVERROR_OPTION_NOT_FOUND;
+  }
+
+  av_dict_free(&opts);
+  return ret;
 }
 
 int encoder_encode(struct Encoder *encoder, AVFrame *frame) {

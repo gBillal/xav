@@ -112,6 +112,42 @@ defmodule Xav.EncoderTest do
       assert Enum.all?(packets, &(&1.dts == &1.pts)), "dts should be equal to pts"
     end
 
+    test "bit_rate and codec_options reach the codec", %{frame: frame} do
+      sizes =
+        for bit_rate <- [100_000, 2_000_000] do
+          encoder =
+            Xav.Encoder.new(:vp8,
+              width: 360,
+              height: 240,
+              format: :yuv420p,
+              time_base: {1, 25},
+              bit_rate: bit_rate,
+              codec_options: [{"deadline", "realtime"}, {"cpu-used", "8"}]
+            )
+
+          packets =
+            Enum.flat_map(0..24, &Xav.Encoder.encode(encoder, %{frame | pts: &1})) ++
+              Xav.Encoder.flush(encoder)
+
+          Enum.sum(for p <- packets, do: byte_size(p.data))
+        end
+
+      [low, high] = sizes
+      assert high > low * 2
+    end
+
+    test "an option the codec does not know fails encoder creation" do
+      assert_raise ErlangError, ~r/unknown_codec_option/, fn ->
+        Xav.Encoder.new(:vp8,
+          width: 360,
+          height: 240,
+          format: :yuv420p,
+          time_base: {1, 25},
+          codec_options: [{"no-such-option", "1"}]
+        )
+      end
+    end
+
     test "encode audio samples" do
       audio_file = "test/fixtures/encoder/audio/input-s16le.raw"
       ref_file = "test/fixtures/encoder/audio/reference.al"
