@@ -145,11 +145,17 @@ defmodule Xav.Encoder do
 
   The return value may be an empty list in case the encoder
   needs more frames to produce a packet.
+
+  ## Options
+
+    * `:keyframe` - when `true`, a video frame is encoded as a keyframe (an
+      intra frame), e.g. to answer a receiver's picture loss indication,
+      without recreating the encoder. Defaults to `false`.
   """
-  @spec encode(t(), Xav.Frame.t()) :: [Xav.Packet.t()]
-  def encode(encoder, frame) do
+  @spec encode(t(), Xav.Frame.t(), keyframe: boolean()) :: [Xav.Packet.t()]
+  def encode(encoder, frame, opts \\ []) do
     encoder
-    |> Xav.Encoder.NIF.encode(frame.data, frame.pts)
+    |> Xav.Encoder.NIF.encode(frame.data, frame.pts, Keyword.get(opts, :keyframe, false))
     |> to_packets()
   end
 

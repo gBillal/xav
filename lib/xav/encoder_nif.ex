@@ -11,7 +11,7 @@ defmodule Xav.Encoder.NIF do
 
   def new(_codec, _params), do: :erlang.nif_error(:undef)
 
-  def encode(_encoder, _data, _pts), do: :erlang.nif_error(:undef)
+  def encode(_encoder, _data, _pts, _keyframe), do: :erlang.nif_error(:undef)
 
   def flush(_encoder), do: :erlang.nif_error(:undef)
 

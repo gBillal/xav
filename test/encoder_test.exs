@@ -112,6 +112,27 @@ defmodule Xav.EncoderTest do
       assert Enum.all?(packets, &(&1.dts == &1.pts)), "dts should be equal to pts"
     end
 
+    test "keyframe: true makes an intra frame on the same encoder", %{frame: frame} do
+      encoder =
+        Xav.Encoder.new(:vp8,
+          width: 360,
+          height: 240,
+          format: :yuv420p,
+          time_base: {1, 25},
+          gop_size: 3000
+        )
+
+      keyframes =
+        for pts <- 0..9,
+            packet <- Xav.Encoder.encode(encoder, %{frame | pts: pts}, keyframe: pts == 5),
+            do: {packet.pts, packet.keyframe?}
+
+      keyframes =
+        keyframes ++ for packet <- Xav.Encoder.flush(encoder), do: {packet.pts, packet.keyframe?}
+
+      assert for({pts, true} <- keyframes, do: pts) == [0, 5]
+    end
+
     test "encode audio samples" do
       audio_file = "test/fixtures/encoder/audio/input-s16le.raw"
       ref_file = "test/fixtures/encoder/audio/reference.al"

@@ -170,7 +170,7 @@ clean:
 ERL_NIF_TERM encode(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   int ret;
 
-  if (argc != 3) {
+  if (argc != 4) {
     return xav_nif_raise(env, "invalid_arg_count");
   }
 
@@ -189,8 +189,12 @@ ERL_NIF_TERM encode(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
     return xav_nif_raise(env, "failed_to_get_int");
   }
 
+  int keyframe = enif_is_identical(argv[3], enif_make_atom(env, "true"));
+
   AVFrame *frame = xav_encoder->frame;
   if (xav_encoder->encoder->codec->type == AVMEDIA_TYPE_VIDEO) {
+    // The frame is reused: every call states whether it must be a keyframe.
+    frame->pict_type = keyframe ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_NONE;
     frame->width = xav_encoder->encoder->c->width;
     frame->height = xav_encoder->encoder->c->height;
     frame->format = xav_encoder->encoder->c->pix_fmt;
@@ -372,7 +376,7 @@ static ERL_NIF_TERM codec_get_sample_rates(ErlNifEnv *env, const AVCodec *codec)
 }
 
 static ErlNifFunc xav_funcs[] = {{"new", 2, new},
-                                 {"encode", 3, encode},
+                                 {"encode", 4, encode},
                                  {"flush", 1, flush},
                                  {"list_encoders", 0, list_encoders}};
 
