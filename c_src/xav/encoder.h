@@ -23,6 +23,8 @@ struct EncoderConfig {
   int profile;
   int sample_rate;
   struct ChannelLayout channel_layout;
+  int64_t bit_rate;
+  AVDictionary *codec_options;
 };
 
 struct Encoder *encoder_alloc();

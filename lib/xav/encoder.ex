@@ -66,6 +66,19 @@ defmodule Xav.Encoder do
 
       To get the list of available profiles for an encoder, see `Xav.list_encoders/0`
       """
+    ],
+    bit_rate: [
+      type: :pos_integer,
+      doc: "Target bit rate in bits per second. The codec's default when not set."
+    ],
+    codec_options: [
+      type: {:list, {:tuple, [:string, :string]}},
+      default: [],
+      doc: """
+      The codec's private FFmpeg options as `{name, value}` pairs, e.g.
+      `[{"deadline", "realtime"}, {"cpu-used", "8"}]` for `:vp8` (libvpx).
+      An option the codec does not know fails encoder creation.
+      """
     ]
   ]
 
@@ -90,6 +103,19 @@ defmodule Xav.Encoder do
       The encoder's profile.
 
       To get the list of available profiles for an encoder, see `Xav.list_encoders/0`
+      """
+    ],
+    bit_rate: [
+      type: :pos_integer,
+      doc: "Target bit rate in bits per second. The codec's default when not set."
+    ],
+    codec_options: [
+      type: {:list, {:tuple, [:string, :string]}},
+      default: [],
+      doc: """
+      The codec's private FFmpeg options as `{name, value}` pairs, e.g.
+      `[{"deadline", "realtime"}, {"cpu-used", "8"}]` for `:vp8` (libvpx).
+      An option the codec does not know fails encoder creation.
       """
     ],
     channel_layout: [
