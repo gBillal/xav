@@ -47,7 +47,7 @@ Or set it once at application start by configuring your application env:
 config :xav, ffmpeg_log_level: :error
 ```
 
-`Xav.Application` reads this on boot and applies it before your supervision tree starts. Valid atoms are `:quiet`, `:panic`, `:fatal`, `:error`, `:warning`, `:info`, `:verbose`, `:debug`, and `:trace`. An integer FFmpeg level is also accepted.
+Xav reads this when its application starts and applies it before your supervision tree starts. Valid atoms are `:quiet`, `:panic`, `:fatal`, `:error`, `:warning`, `:info`, `:verbose`, `:debug`, and `:trace`. An integer FFmpeg level is also accepted.
 
 Note that `av_log_set_level/1` is process-global — changing the level affects every `libav*` call made from the current OS process, not just the reader that triggered the change.
 
