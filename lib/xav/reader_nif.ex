@@ -9,6 +9,7 @@ defmodule Xav.Reader.NIF do
     :ok = :erlang.load_nif(path, 0)
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.FunctionArity
   def new(
         _path,
         _device,

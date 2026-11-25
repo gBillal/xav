@@ -8,7 +8,6 @@ static int get_profile(enum AVCodecID, const char *);
 static ERL_NIF_TERM codec_get_profiles(ErlNifEnv *, const AVCodec *);
 static ERL_NIF_TERM codec_get_sample_formats(ErlNifEnv *, const AVCodec *);
 static ERL_NIF_TERM codec_get_sample_rates(ErlNifEnv *, const AVCodec *);
-static ERL_NIF_TERM codec_get_channel_layouts(ErlNifEnv *, const AVCodec *);
 static int get_codec_options(ErlNifEnv *, ERL_NIF_TERM, AVDictionary **);
 
 ERL_NIF_TERM new (ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
@@ -355,7 +354,20 @@ static ERL_NIF_TERM codec_get_sample_formats(ErlNifEnv *env, const AVCodec *code
     return result;
   }
 
-  const enum AVSampleFormat *sample_format = codec->sample_fmts;
+  const enum AVSampleFormat *sample_format = NULL;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+  if (avcodec_get_supported_config(NULL, codec, AV_CODEC_CONFIG_SAMPLE_FORMAT, 0,
+                                   (const void **)&sample_format, NULL) < 0) {
+    return result;
+  }
+#else
+  sample_format = codec->sample_fmts;
+#endif
+
+  if (sample_format == NULL) {
+    return result;
+  }
+
   while (*sample_format != AV_SAMPLE_FMT_NONE) {
     ERL_NIF_TERM format_name = enif_make_atom(env, av_get_sample_fmt_name(*sample_format));
     result = enif_make_list_cell(env, format_name, result);
@@ -369,11 +381,23 @@ static ERL_NIF_TERM codec_get_sample_formats(ErlNifEnv *env, const AVCodec *code
 static ERL_NIF_TERM codec_get_sample_rates(ErlNifEnv *env, const AVCodec *codec) {
   ERL_NIF_TERM result = enif_make_list(env, 0);
 
-  if (codec->type != AVMEDIA_TYPE_AUDIO || codec->supported_samplerates == NULL) {
+  if (codec->type != AVMEDIA_TYPE_AUDIO) {
     return result;
   }
 
-  const int *sample_rate = codec->supported_samplerates;
+  const int *sample_rate = NULL;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+  if (avcodec_get_supported_config(NULL, codec, AV_CODEC_CONFIG_SAMPLE_RATE, 0,
+                                   (const void **)&sample_rate, NULL) < 0) {
+    return result;
+  }
+#else
+  sample_rate = codec->supported_samplerates;
+#endif
+
+  if (sample_rate == NULL) {
+    return result;
+  }
 
   while (*sample_rate != 0) {
     result = enif_make_list_cell(env, enif_make_int(env, *sample_rate), result);
