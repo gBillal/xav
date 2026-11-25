@@ -189,6 +189,16 @@ defmodule Xav.Encoder do
     |> to_packets()
   end
 
+  @doc """
+  Closes the encoder, releasing its codec and buffers now rather than when
+  the encoder is garbage collected.
+
+  Pending packets are dropped: call `flush/1` first to get them.
+  `encode/2` and `flush/1` raise on a closed encoder. Closing it again is a no-op.
+  """
+  @spec close(t()) :: :ok
+  def close(encoder), do: Xav.Encoder.NIF.close(encoder)
+
   defp to_packets(result) do
     Enum.map(result, fn {data, dts, pts, keyframe?} ->
       %Xav.Packet{data: data, dts: dts, pts: pts, keyframe?: keyframe?}

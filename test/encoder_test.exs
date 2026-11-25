@@ -179,4 +179,34 @@ defmodule Xav.EncoderTest do
       assert File.read!(ref_file) == encoded_data
     end
   end
+
+  describe "close/1" do
+    test "frees the encoder now; encoding or flushing it then raises" do
+      frame = %Xav.Frame{
+        type: :video,
+        data: File.read!("test/fixtures/video_converter/frame_360x240.yuv"),
+        format: :yuv420p,
+        width: 360,
+        height: 240,
+        pts: 0
+      }
+
+      encoder =
+        Xav.Encoder.new(:vp8, width: 360, height: 240, format: :yuv420p, time_base: {1, 25})
+
+      Xav.Encoder.encode(encoder, frame)
+
+      assert :ok = Xav.Encoder.close(encoder)
+      assert_raise ErlangError, ~r/encoder_closed/, fn -> Xav.Encoder.encode(encoder, frame) end
+      assert_raise ErlangError, ~r/encoder_closed/, fn -> Xav.Encoder.flush(encoder) end
+    end
+
+    test "a second close is :ok" do
+      encoder =
+        Xav.Encoder.new(:vp8, width: 360, height: 240, format: :yuv420p, time_base: {1, 25})
+
+      assert :ok = Xav.Encoder.close(encoder)
+      assert :ok = Xav.Encoder.close(encoder)
+    end
+  end
 end

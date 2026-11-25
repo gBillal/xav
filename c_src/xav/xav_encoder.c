@@ -191,6 +191,10 @@ ERL_NIF_TERM encode(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
     return xav_nif_raise(env, "invalid_resource");
   }
 
+  if (xav_encoder->encoder == NULL) {
+    return xav_nif_raise(env, "encoder_closed");
+  }
+
   ErlNifBinary input;
   if (!enif_inspect_binary(env, argv[1], &input)) {
     return xav_nif_raise(env, "failed_to_inspect_binary");
@@ -244,6 +248,10 @@ ERL_NIF_TERM flush(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
     return xav_nif_raise(env, "invalid_resource");
   }
 
+  if (xav_encoder->encoder == NULL) {
+    return xav_nif_raise(env, "encoder_closed");
+  }
+
   int ret = encoder_encode(xav_encoder->encoder, NULL);
   if (ret < 0) {
     return xav_nif_raise(env, "failed_to_encode");
@@ -291,6 +299,21 @@ void free_xav_encoder(ErlNifEnv *env, void *obj) {
   if (xav_encoder->frame != NULL) {
     av_frame_free(&xav_encoder->frame);
   }
+}
+
+// Frees the codec now rather than when the resource is garbage collected.
+ERL_NIF_TERM close_encoder(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  if (argc != 1) {
+    return xav_nif_raise(env, "invalid_arg_count");
+  }
+
+  struct XavEncoder *xav_encoder;
+  if (!enif_get_resource(env, argv[0], xav_encoder_resource_type, (void **)&xav_encoder)) {
+    return xav_nif_raise(env, "invalid_resource");
+  }
+
+  free_xav_encoder(env, xav_encoder);
+  return enif_make_atom(env, "ok");
 }
 
 static ERL_NIF_TERM packets_to_term(ErlNifEnv *env, struct Encoder *encoder) {
@@ -386,6 +409,7 @@ static ERL_NIF_TERM codec_get_sample_rates(ErlNifEnv *env, const AVCodec *codec)
 static ErlNifFunc xav_funcs[] = {{"new", 2, new},
                                  {"encode", 3, encode},
                                  {"flush", 1, flush},
+                                 {"close", 1, close_encoder},
                                  {"list_encoders", 0, list_encoders}};
 
 static int load(ErlNifEnv *env, void **priv, ERL_NIF_TERM load_info) {
