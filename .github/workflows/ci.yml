@@ -8,8 +8,8 @@ jobs:
     name: lint / ubuntu-latest / OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
-        otp: ["25"]
-        elixir: ["1.14"]
+        otp: ["26"]
+        elixir: ["1.15"]
     steps:
       - uses: actions/checkout@v2
       - uses: erlef/setup-beam@v1
