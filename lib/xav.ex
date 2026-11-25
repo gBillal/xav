@@ -83,7 +83,7 @@ defmodule Xav do
       # config/runtime.exs
       config :xav, ffmpeg_log_level: :error
 
-  `Xav.Application` reads this on boot and calls `set_log_level/1`
+  Xav reads this when its application starts and calls `set_log_level/1`
   for you.
 
   ## Examples
