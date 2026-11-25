@@ -383,9 +383,9 @@ static ERL_NIF_TERM codec_get_sample_rates(ErlNifEnv *env, const AVCodec *codec)
   return result;
 }
 
-static ErlNifFunc xav_funcs[] = {{"new", 2, new},
-                                 {"encode", 3, encode},
-                                 {"flush", 1, flush},
+static ErlNifFunc xav_funcs[] = {{"new", 2, new, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+                                 {"encode", 3, encode, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+                                 {"flush", 1, flush, ERL_NIF_DIRTY_JOB_CPU_BOUND},
                                  {"list_encoders", 0, list_encoders}};
 
 static int load(ErlNifEnv *env, void **priv, ERL_NIF_TERM load_info) {
