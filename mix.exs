@@ -60,14 +60,15 @@ defmodule Xav.MixProject do
 
   defp deps do
     [
-      {:nx, "~> 0.7", optional: true},
+      {:nx, "~> 1.0", optional: true},
       {:elixir_make, "~> 0.7", runtime: false},
       {:nimble_options, "~> 1.0"},
 
       # dev/test
       # bumblebee and exla for testing speech to text
-      {:bumblebee, "~> 0.6", only: :test},
+      {:bumblebee, "~> 0.8", only: :test},
       {:exla, ">= 0.0.0", only: :test},
+      {:fine, "~> 0.1.6", only: :test, override: true},
       # other
       {:excoveralls, "~> 0.18.0", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", runtime: false, only: :dev},
